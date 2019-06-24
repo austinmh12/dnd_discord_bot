@@ -122,7 +122,7 @@ def roll(die):
 			ret.append(value)
 		elif dice == 'd100':
 			log.info('Rolling D100')
-			value = rand.randint(1,10) * 10
+			value = rand.randint(1,100)
 			ret.append(value)
 		else:
 			return help_.get('!roll')
