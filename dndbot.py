@@ -83,6 +83,11 @@ def parse_command(message):
 		ret = heal(message)
 		return ret
 
+	if command == '!stat':
+		log.debug('The stat command is being used!')
+		ret = stat(message)
+		return ret
+
 	
 
 	return 'Unknown command.'
@@ -191,7 +196,13 @@ def create(message):
 		tot=sum(filt)
 	)
 
-
+def stat(message):
+	username, _ = str(message.author).split('#')
+	_, attr = message.content.upper().split(' ')
+	user_sheet = dnd_sheet.worksheet(username)
+	attr_cell = user_sheet.find(attr)
+	attr_value = user_sheet.cell(attr_cell.row, attr_cell.col + 1).value
+	return f'<@{message.author.id}> has a {attr} of {attr_value}.'
 
 
 
@@ -223,7 +234,9 @@ help_ = {
 	'!damage': get_embed('Damage', 'Damages a specified player with either a dice roll or a determined amount of damage.', '`!damage @<user> <die or damage number>`', ['`!damage @rectrec369 6`','`!damage @rectrec369 d8`']),
 	'!heal': get_embed('Heal', 'Heals a specified played with either a determined amount or a dice roll.', '`!heal <@user> <die or damage number>', ['`!heal @rectrec369 3`', '`!heal @rectrec369 d8`']),
 	'!init': get_embed('Initiative', 'Rolls for initiative taking into account the user\'s DEX modifier.', '`!init`', ['`!init`','`!i`']),
-	'!i': get_embed('Initiative', 'Rolls for initiative taking into account the user\'s DEX modifier.', '`!init`', ['`!init`','`!i`'])
+	'!i': get_embed('Initiative', 'Rolls for initiative taking into account the user\'s DEX modifier.', '`!init`', ['`!init`','`!i`']),
+	'!create': get_embed('Create', 'Rolls four D6s and removes the lowest value. Used to create new characters.', '`!create`', ['`!create`']),
+	'!stat': get_embed('Stat', 'Returns the value of the user\'s specified stat.', '`!stat <stat>`', ['`!stat dex`','`!stat str`'])
 
 }
 
