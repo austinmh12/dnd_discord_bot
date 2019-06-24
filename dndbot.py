@@ -13,8 +13,8 @@ stream_format = logging.Formatter('[%(levelname)s]: %(message)s')
 stream_handler.setFormatter(stream_format)
 log.addHandler(stream_handler)
 
-CLIENT_ID = client_info.info['CLIENT_ID']
-CLIENT_SECRET = client_info.info['CLIENT_SECRET']
+# CLIENT_ID = client_info.info['CLIENT_ID']
+# CLIENT_SECRET = client_info.info['CLIENT_SECRET']
 TOKEN = client_info.info['TOKEN']
 
 
@@ -65,13 +65,9 @@ def parse_command(message):
 		ret = create(message)
 		return ret
 
-	if not args:
-		log.info('No arguments, displaying help')
-		return help_.get(command)
-
 	if command == '!roll':
 		log.debug('The roll command is being used!')
-		ret = roll(args)
+		ret = roll(message)
 		return ret
 	if command == '!damage':
 		log.debug('The damage command is being used!')
@@ -85,23 +81,52 @@ def parse_command(message):
 
 	if command == '!stat':
 		log.debug('The stat command is being used!')
-		ret = stat(message)
+		ret = get_stat(message)
 		return ret
 
+	if command == '!skill':
+		log.debug('The skill command is being used!')
+		ret = get_skill(message)
+		return ret
+
+	if command == '!xp':
+		log.debug('The get_exp command is being used!')
+		ret = get_exp(message)
+		return ret
+
+	if command == '!addxp':
+		log.debug('The add_exp command is being used!')
+		ret = add_exp(message)
+		return ret
+
+	if command == '!summary':
+		log.debug('The summary command is being used!')
+		ret = summary(message)
+		return ret
 	
+	if not args:
+		log.info('No arguments, displaying help')
+		return help_.get(command)
 
 	return 'Unknown command.'
 
-
-def roll(die):
+def roll(message):
 	ret = []
+	_, *die = message.content.lower().split(' ')
+
+	if not die:
+		return help_.get('!roll')
+
 	for dice in die:
-		dice_val = int(dice[1:])
+		if 'x' in dice:
+			amt, dice_val = [int(val) for val in dice.split('xd')]
+		else:
+			amt = 1
+			dice_val = int(dice[1:])
 		if dice_val not in [4,6,8,10,12,20,100]:
 			return help_.get('!roll')
-		log.info(f'Rolling D{dice_val}')
-		value = rand.randint(1, dice_val)
-		ret.append(value)
+		log.info(f'Rolling {amt} D{dice_val}')
+		ret.extend([rand.randint(1,dice_val) for i in range(amt)])
 	return ret
 
 def damage(message):
@@ -173,7 +198,7 @@ def create(message):
 		tot=sum(filt)
 	)
 
-def stat(message):
+def get_stat(message):
 	username, _ = str(message.author).split('#')
 	_, attr = message.content.upper().split(' ')
 	if attr not in ['STR','DEX','CON','INT','WIS','CHA','HP']:
@@ -182,6 +207,61 @@ def stat(message):
 	attr_cell = user_sheet.find(attr)
 	attr_value = user_sheet.cell(attr_cell.row, attr_cell.col + 1).value
 	return f'<@{message.author.id}> has a {attr} of {attr_value}.'
+
+def get_skill(message):
+	username, _ = str(message.author).split('#')
+	_, skill = message.content.lower().split(' ')
+	user_sheet = dnd_sheet.worksheet(username)
+	skill_list = [cell.value.lower() for cell in user_sheet.range('M2:M40')]
+	if skill not in skill_list:
+		return 'Not a skill'
+	skill_cell = user_sheet.find(skill)
+	skill_value = user_sheet.cell(skill_cell.row, skill_cell.col+1).value
+	return f'<@{message.author.id}> has a {skill} of {skill_value}.'
+
+def get_exp(message):
+	username, _ = str(message.author).split('#')
+	user_sheet = dnd_sheet.worksheet(username)
+	exp_cell = user_sheet.find('EXP')
+	exp_value = user_sheet.cell(exp_cell.row+1, exp_cell.col).value
+	return f'<@{message.author.id}> has {exp_value} exp.'
+
+def add_exp(message):
+	username, _ = str(message.author).split('#')
+	_, exp = message.content.lower().split(' ')
+	if not exp:
+		return help_.get('!addxp')
+	exp = int(exp)
+	user_sheet = dnd_sheet.worksheet(username)
+	exp_cell = user_sheet.find('EXP')
+	exp_value = int(user_sheet.cell(exp_cell.row+1, exp_cell.col).value)
+	new_exp = exp_value + exp
+	user_sheet.update_cell(exp_cell.row+1, exp_cell.col, new_exp)
+	return f'<@{message.author.id}> has {new_exp} exp.'
+
+def save_roll(message):
+	pass
+
+def summary(message):
+	username, _ = str(message.author).split('#')
+	user_sheet = dnd_sheet.worksheet(username)
+	name = user_sheet.acell('B2').value
+	embed = discord.Embed(
+		title=f'**{name}**',
+		description=f'{username}\'s character.',
+		colour=discord.Colour.blue()
+	)
+	cell_names = [c.value for c in user_sheet.range('A3:A15')]
+	log.debug(cell_names)
+	cell_values = [c.value for c in user_sheet.range('B3:B15')]
+	log.debug(cell_values)
+	for i, cell in enumerate(list(zip(*[cell_names, cell_values])), start=1):
+		cell_name, cell_value = cell
+		if not cell_value:
+			cell_value = 'None'
+		embed.add_field(name=f'**> {cell_name}**', value=cell_value, inline=True)
+
+	return embed
 
 
 
@@ -207,13 +287,17 @@ def get_embed(title, desc, usage, examples):
 
 
 help_ = {
-	'!roll': get_embed('Roll', 'Rolls the specified die.', '`!roll [dice]`', ['`!roll d4`','`!roll d12 d20`']),
+	'!roll': get_embed('Roll', 'Rolls the specified die.', '`!roll [dice]`', ['`!roll d4`','`!roll d12 d20`','`!roll 2xd8`']),
 	'!damage': get_embed('Damage', 'Damages a specified player with either a dice roll or a determined amount of damage.', '`!damage @<user> <die or damage number>`', ['`!damage @rectrec369 6`','`!damage @rectrec369 d8`']),
 	'!heal': get_embed('Heal', 'Heals a specified played with either a determined amount or a dice roll.', '`!heal <@user> <die or damage number>', ['`!heal @rectrec369 3`', '`!heal @rectrec369 d8`']),
 	'!init': get_embed('Initiative', 'Rolls for initiative taking into account the user\'s DEX modifier.', '`!init`', ['`!init`','`!i`']),
 	'!i': get_embed('Initiative', 'Rolls for initiative taking into account the user\'s DEX modifier.', '`!init`', ['`!init`','`!i`']),
 	'!create': get_embed('Create', 'Rolls four D6s and removes the lowest value. Used to create new characters.', '`!create`', ['`!create`']),
-	'!stat': get_embed('Stat', 'Returns the value of the user\'s specified stat.', '`!stat <stat>`', ['`!stat dex`','`!stat str`'])
+	'!stat': get_embed('Stat', 'Returns the value of the user\'s specified stat.', '`!stat <stat>`', ['`!stat dex`','`!stat str`']),
+	'!skill': get_embed('Skill','Returns the value of the user\'s specified skill.','`!skill <skill>`',['`!skill stealth`','`!skill perception`']),
+	'!xp': get_embed('XP','Returns the amount of experience the user has.','`!xp`',['`!xp`']),
+	'!addxp': get_embed('Add XP','Adds the amount of experience to the user\'s current experience','`!addxp <amount>`',['`!addxp 500`','`!addxp 1250`']),
+	'!summary': get_embed('Summary','Returns a summary of the current user\'s character','`!summary`',['`!summary`'])
 
 }
 
