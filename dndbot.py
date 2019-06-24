@@ -150,7 +150,8 @@ def deal_damage(user, user_id, damage):
 	existing_wounds = user_sheet.cell(hp_cell.row, hp_cell.col+2).value
 	new_wounds = int(existing_wounds) + int(damage)
 	user_sheet.update_cell(hp_cell.row, hp_cell.col+2, new_wounds)
-	return f'Damaged {user_id} for {damage}. Ouch!'
+	damage_quip = rand.choice(damage_quips)
+	return f'Damaged {user_id} for {damage}. {damage_quip}!'
 
 def heal(message):
 	msg = message.content.lower()
@@ -199,12 +200,12 @@ def create(message):
 def stat(message):
 	username, _ = str(message.author).split('#')
 	_, attr = message.content.upper().split(' ')
+	if attr not in ['STR','DEX','CON','INT','WIS','CHA','HP']:
+		return 'Not a stat.'
 	user_sheet = dnd_sheet.worksheet(username)
 	attr_cell = user_sheet.find(attr)
 	attr_value = user_sheet.cell(attr_cell.row, attr_cell.col + 1).value
 	return f'<@{message.author.id}> has a {attr} of {attr_value}.'
-
-
 
 
 
@@ -239,6 +240,17 @@ help_ = {
 	'!stat': get_embed('Stat', 'Returns the value of the user\'s specified stat.', '`!stat <stat>`', ['`!stat dex`','`!stat str`'])
 
 }
+
+damage_quips = [
+	'Ouch',
+	'That must\'ve hurt',
+	'F',
+	'Oof',
+	'Holy shit',
+	'Where\'d they learn to do that',
+	'Oh barnacles',
+	'Oh fuck',
+]
 
 
 client.run(TOKEN)
