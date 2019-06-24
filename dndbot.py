@@ -96,36 +96,12 @@ def parse_command(message):
 def roll(die):
 	ret = []
 	for dice in die:
-		if dice == 'd4':
-			log.info('Rolling D4')
-			value = rand.randint(1,4)
-			ret.append(value)
-		elif dice == 'd6':
-			log.info('Rolling D6')
-			value = rand.randint(1,6)
-			ret.append(value)
-		elif dice == 'd8':
-			log.info('Rolling D8')
-			value = rand.randint(1,8)
-			ret.append(value)
-		elif dice == 'd10':
-			log.info('Rolling D10')
-			value = rand.randint(1,10)
-			ret.append(value)
-		elif dice == 'd12':
-			log.info('Rolling D12')
-			value = rand.randint(1,12)
-			ret.append(value)
-		elif dice == 'd20':
-			log.info('Rolling D20')
-			value = rand.randint(1,20)
-			ret.append(value)
-		elif dice == 'd100':
-			log.info('Rolling D100')
-			value = rand.randint(1,100)
-			ret.append(value)
-		else:
+		dice_val = int(dice[1:])
+		if dice_val not in [4,6,8,10,12,20,100]:
 			return help_.get('!roll')
+		log.info(f'Rolling D{dice_val}')
+		value = rand.randint(1, dice_val)
+		ret.append(value)
 	return ret
 
 def damage(message):
