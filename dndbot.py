@@ -43,7 +43,7 @@ async def on_message(message):
 		elif isinstance(resp, list):
 			await message.channel.send(' '.join([str(i) for i in resp]))
 		elif not resp:
-			await message.channel.send(file=discord.File('idiots.gif'))
+			await message.channel.send(file=discord.File('resources/idiots.gif'))
 		elif isinstance(resp, discord.Embed):
 			await message.channel.send(embed=resp)
 		elif isinstance(resp, discord.File):
@@ -174,9 +174,9 @@ def roll(message):
 		log.info(f'Rolling {amt} D{dice_val}')
 		ret.extend([rand.randint(1,dice_val) for i in range(amt)])
 	if len(ret) == 1 and ret[0] == 20 and dice_val == 20:
-		return (20, discord.File('nat20.gif'))
+		return (20, discord.File('resources/nat20.gif'))
 	if len(ret) == 1 and ret[0] == 1 and dice_val == 20:
-		return (1, discord.File('nat1.gif'))
+		return (1, discord.File('resources/nat1.gif'))
 	return ret
 
 def damage(message):
