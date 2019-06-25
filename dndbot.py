@@ -41,9 +41,15 @@ async def on_message(message):
 		if isinstance(resp, str):
 			await message.channel.send(resp)
 		elif isinstance(resp, list):
-			await message.channel.send(str(resp))
-		else:
+			await message.channel.send(' '.join([str(i) for i in resp]))
+		elif not resp:
+			await message.channel.send(file=discord.File('idiots.gif'))
+		elif isinstance(resp, discord.Embed):
 			await message.channel.send(embed=resp)
+		elif isinstance(resp, discord.File):
+			await message.channel.send(file=resp)
+		elif isinstance(resp, tuple):
+			await message.channel.send(resp[0], file=resp[1])
 
 def parse_command(message):
 	msg = message.content.lower()
@@ -103,16 +109,56 @@ def parse_command(message):
 		log.debug('The summary command is being used!')
 		ret = summary(message)
 		return ret
+
+	if command == '!d4':
+		log.debug('Running roll command!')
+		ret = roll(['d4'])
+		return ret
+
+	if command == '!d6':
+		log.debug('Running roll command!')
+		ret = roll(['d6'])
+		return ret
+
+	if command == '!d8':
+		log.debug('Running roll command!')
+		ret = roll(['d8'])
+		return ret
+
+	if command == '!d10':
+		log.debug('Running roll command!')
+		ret = roll(['d10'])
+		return ret
+
+	if command == '!d12':
+		log.debug('Running roll command!')
+		ret = roll(['d12'])
+		return ret
+
+	if command == '!d20':
+		log.debug('Running roll command!')
+		ret = roll(['d20'])
+		return ret
+
+	if command == '!d100':
+		log.debug('Running roll command!')
+		ret = roll(['d100'])
+		return ret
+
+
 	
-	if not args:
+	if not args and command in list(help_.keys()):
 		log.info('No arguments, displaying help')
 		return help_.get(command)
 
-	return 'Unknown command.'
+	return None
 
 def roll(message):
 	ret = []
-	_, *die = message.content.lower().split(' ')
+	if isinstance(message, list):
+		die = message
+	else:
+		_, *die = message.content.lower().split(' ')
 
 	if not die:
 		return help_.get('!roll')
@@ -127,6 +173,10 @@ def roll(message):
 			return help_.get('!roll')
 		log.info(f'Rolling {amt} D{dice_val}')
 		ret.extend([rand.randint(1,dice_val) for i in range(amt)])
+	if len(ret) == 1 and ret[0] == 20 and dice_val == 20:
+		return (20, discord.File('nat20.gif'))
+	if len(ret) == 1 and ret[0] == 1 and dice_val == 20:
+		return (1, discord.File('nat1.gif'))
 	return ret
 
 def damage(message):
@@ -185,8 +235,8 @@ def initiative(message):
 	user_sheet = dnd_sheet.worksheet(username)
 	dex_cell = user_sheet.find('DEX')
 	dex_mod = int(user_sheet.cell(dex_cell.row, dex_cell.col+2).value)
-	init_roll = roll(['d20'])[0] + dex_mod
-	return f'<@{author.id}> rolled a {init_roll} for initiative.'
+	init_roll = roll(['d20'])[0]
+	return f'<@{author.id}> rolled a {init_roll + dex_mod} for initiative.'
 
 def create(message):
 	rolls = roll(['d6','d6','d6','d6'])
@@ -240,7 +290,7 @@ def save_roll(message):
 
 def attack_roll(message):
 	user_sheet = get_user_sheet(message)
-	
+
 	pass
 
 def summary(message):
