@@ -199,19 +199,17 @@ def create(message):
 	)
 
 def get_stat(message):
-	username, _ = str(message.author).split('#')
+	user_sheet = get_user_sheet(message)
 	_, attr = message.content.upper().split(' ')
 	if attr not in ['STR','DEX','CON','INT','WIS','CHA','HP']:
 		return 'Not a stat.'
-	user_sheet = dnd_sheet.worksheet(username)
 	attr_cell = user_sheet.find(attr)
 	attr_value = user_sheet.cell(attr_cell.row, attr_cell.col + 1).value
 	return f'<@{message.author.id}> has a {attr} of {attr_value}.'
 
 def get_skill(message):
-	username, _ = str(message.author).split('#')
+	user_sheet = get_user_sheet(message)
 	_, skill = message.content.lower().split(' ')
-	user_sheet = dnd_sheet.worksheet(username)
 	skill_list = [cell.value.lower() for cell in user_sheet.range('M2:M40')]
 	if skill not in skill_list:
 		return 'Not a skill'
@@ -220,19 +218,17 @@ def get_skill(message):
 	return f'<@{message.author.id}> has a {skill} of {skill_value}.'
 
 def get_exp(message):
-	username, _ = str(message.author).split('#')
-	user_sheet = dnd_sheet.worksheet(username)
+	user_sheet = get_user_sheet(message)
 	exp_cell = user_sheet.find('EXP')
 	exp_value = user_sheet.cell(exp_cell.row+1, exp_cell.col).value
 	return f'<@{message.author.id}> has {exp_value} exp.'
 
 def add_exp(message):
-	username, _ = str(message.author).split('#')
 	_, exp = message.content.lower().split(' ')
 	if not exp:
 		return help_.get('!addxp')
 	exp = int(exp)
-	user_sheet = dnd_sheet.worksheet(username)
+	user_sheet = get_user_sheet(message)
 	exp_cell = user_sheet.find('EXP')
 	exp_value = int(user_sheet.cell(exp_cell.row+1, exp_cell.col).value)
 	new_exp = exp_value + exp
@@ -240,6 +236,11 @@ def add_exp(message):
 	return f'<@{message.author.id}> has {new_exp} exp.'
 
 def save_roll(message):
+	pass
+
+def attack_roll(message):
+	user_sheet = get_user_sheet(message)
+	
 	pass
 
 def summary(message):
@@ -264,7 +265,10 @@ def summary(message):
 	return embed
 
 
-
+def get_user_sheet(message):
+	username, _ = str(message.author).split('#')
+	user_sheet - dnd_sheet.worksheet(username)
+	return user_sheet
 
 
 
