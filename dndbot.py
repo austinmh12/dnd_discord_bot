@@ -1,10 +1,9 @@
-import discord
-import re
+import discord, re, gspread, logging
 from oauth2client.service_account import ServiceAccountCredentials as SAC
-import gspread
 import random as rand
-import logging
+from PIL import Image as Img, ImageDraw as IDraw
 import client_info
+from Character import Character as Char
 
 log = logging.getLogger(__name__)
 log.setLevel(logging.DEBUG)
@@ -22,6 +21,8 @@ scope = ['https://spreadsheets.google.com/feeds','https://www.googleapis.com/aut
 cred = SAC.from_json_keyfile_name('dndbot_scopes.json', scope)
 g_sheets = gspread.authorize(cred)
 dnd_sheet = g_sheets.open('DnDTest')
+
+characters = {}
 
 client = discord.Client()
 
@@ -144,6 +145,22 @@ def parse_command(message):
 		log.debug('Running roll command!')
 		ret = roll(['d100'])
 		return ret
+
+	if command == '!field':
+		log.debug('Creating battlefield!')
+		ret = create_battlefield(message)
+		return ret
+
+	if command == '!char':
+		log.debug('Getting character')
+		if str(message.author) not in list(characters.keys()):
+			log.debug('Character not loaded before.')
+			characters[str(message.author)] = get_character(message)
+			return str(characters.get(str(message.author)))
+		else:
+			log.debug('Character loaded already.')
+			return str(characters.get(str(message.author)))
+
 
 
 	
@@ -290,7 +307,9 @@ def save_roll(message):
 
 def attack_roll(message):
 	user_sheet = get_user_sheet(message)
-
+	# get primary weapon attack
+		# get primary weapon attack2
+	# roll dice for damage
 	pass
 
 def summary(message):
@@ -314,16 +333,29 @@ def summary(message):
 
 	return embed
 
-
 def get_user_sheet(message):
 	username, _ = str(message.author).split('#')
-	user_sheet - dnd_sheet.worksheet(username)
+	user_sheet = dnd_sheet.worksheet(username)
 	return user_sheet
 
+def create_battlefield(message):
+	width, height = map(int, message.content.split(' ')[1:])
+	# width = int(width)
+	# height = int(height)
+	img = Img.new('RGB', (width, height), color='green')
+	draw = IDraw.Draw(img)
+	for i in range(1, width // 10):
+		draw.line((i*10, 0, i*10, height), fill='#fff')
+	for i in range(1, height // 10):
+		draw.line((0, i*10, width, i*10), fill='#fff')
+	img.save('resources/field.png', 'PNG')
+	field = discord.File('resources/field.png')
+	return field
 
-
-
-
+def get_character(message):
+	username, _ = str(message.author).split('#')
+	user_id = message.author.id
+	return Char(user_id, username)
 
 
 
