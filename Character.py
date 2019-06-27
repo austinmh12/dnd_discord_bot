@@ -14,6 +14,7 @@ class Character:
 		"""
 		self.user_id = user_id
 		self.username = username
+		self.usersheet = dnd_sheet.worksheet(self.username)
 		self.get_infos()
 		self.get_stats()
 
@@ -38,23 +39,20 @@ class Character:
 
 	def get_info(self, info):
 		""""""
-		usersheet = dnd_sheet.worksheet(self.username)
-		info_cell = usersheet.find(stat)
-		return usersheet.cell(info_cell.row, info_cell.col+1).value
+		info_cell = self.usersheet.find(info)
+		return self.usersheet.cell(info_cell.row, info_cell.col+1).value
 
 	@property
 	def health(self):
 		""""""
-		usersheet = dnd_sheet.worksheet(self.username)
-		health_cell = usersheet.find('HP')
-		hp = int(usersheet.cell(health_cell.row, health_cell.col+3).value)
+		health_cell = self.usersheet.find('HP')
+		hp = int(self.usersheet.cell(health_cell.row, health_cell.col+3).value)
 		return hp
 
 	def get_stat(self, stat):
 		""""""
-		usersheet = dnd_sheet.worksheet(self.username)
-		stat_cell = usersheet.find(stat)
-		return int(usersheet.cell(stat_cell.row, stat_cell.col+1).value)
+		stat_cell = self.usersheet.find(stat)
+		return int(self.usersheet.cell(stat_cell.row, stat_cell.col+1).value)
 
 	@property
 	def str_mod(self):
@@ -82,23 +80,20 @@ class Character:
 
 	@property
 	def fort_save(self):
-		usersheet = dnd_sheet.worksheet(self.username)
-		fort_cell = usersheet.find('Fortitude')
-		fort_bonus = sum(map(int, [cell.value for cell in usersheet.range(fort_cell.row, fort_cell.col+2, fort_cell.row, fort_cell.col+5)]))
+		fort_cell = self.usersheet.find('Fortitude')
+		fort_bonus = sum(map(int, [cell.value for cell in self.usersheet.range(fort_cell.row, fort_cell.col+2, fort_cell.row, fort_cell.col+5)]))
 		return fort_bonus + self.str_mod
 	
 	@property
 	def reflex_save(self):
-		usersheet = dnd_sheet.worksheet(self.username)
-		reflex_cell = usersheet.find('Reflex')
-		reflex_bonus = sum(map(int, [cell.value for cell in usersheet.range(reflex_cell.row, reflex_cell.col+2, reflex_cell.row, reflex_cell.col+5)]))
+		reflex_cell = self.usersheet.find('Reflex')
+		reflex_bonus = sum(map(int, [cell.value for cell in self.usersheet.range(reflex_cell.row, reflex_cell.col+2, reflex_cell.row, reflex_cell.col+5)]))
 		return reflex_bonus + self.dex_mod
 
 	@property
 	def will_save(self):
-		usersheet = dnd_sheet.worksheet(self.username)
-		will_cell = usersheet.find('Fortitude')
-		will_bonus = sum(map(int, [cell.value for cell in usersheet.range(will_cell.row, will_cell.col+2, will_cell.row, will_cell.col+5)]))
+		will_cell = self.usersheet.find('Fortitude')
+		will_bonus = sum(map(int, [cell.value for cell in self.usersheet.range(will_cell.row, will_cell.col+2, will_cell.row, will_cell.col+5)]))
 		return will_bonus + self.con_mod
 
 	def get_modifier(self, stat):
